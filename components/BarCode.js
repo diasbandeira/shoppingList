@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import Dialog from  'react-native-dialog';
+import NewItem from './NewItem';
+import UpdateItem from './UpdateItem';
 
 export default function BarCode(props) {
-  const {listProduct, setListProduct} = props;
+  const {listProduct, setListProduct, productDescription, setProductDescription} = props;
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [barCode, setBarCode] = useState(null);
   const [product, setProduct] = useState(null);
   const [value, setValue] = useState(null);
+  const [valueLabel, setValueLabel] = useState(null);
   const [promptVisible, setPromptVisible] = useState(false);
   const [visibleProductExist, setVisibleProductExist] = useState(false);
-  
+  const [updateValue, setUpdateValue] = useState(false);
   useEffect(() => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -22,13 +25,15 @@ export default function BarCode(props) {
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
-    //alert(`Bar code with type ${type} and data ${data} has been scanned!`);
     const found = listProduct.findIndex(item => item.barCode === data);
+    setValueLabel(listProduct[found].value);
+    //console.log(value);
     if(found < 0){
       setBarCode(data);
       setPromptVisible(true);
     }else{
       setBarCode(data);
+      //setUpdateValue(true);
       setVisibleProductExist(true);
     }    
   };
@@ -41,27 +46,31 @@ export default function BarCode(props) {
     return <Text>No access to camera</Text>;
   }
   const handleProduct = () => {
-    let productDescription = {};
     if(promptVisible){
       setPromptVisible(false);
-      productDescription = {
+      setProductDescription({
           barCode: barCode,
           name: product,
           value: value,
           aisle: null,
           amount: null,
-      };
-      setListProduct([...listProduct, productDescription]);
+      });
+      setBarCode(null);
+      setProduct(null);
+      setValue(null);
     }else{
       setVisibleProductExist(false);
-      const index = listProduct.findIndex(item => item => item.barCode === barCode);
-      productDescription ={
+      const index = listProduct.findIndex(item => item.barCode === barCode);
+      setProductDescription({
         barCode: listProduct[index].barCode,
         name: listProduct[index].name,
         value: value,
-      }
-      const filtered = listProduct.filter(item => item.barCode !== barCode );
-      setListProduct([...filtered, productDescription]);
+        aisle: null,
+        amount: null,
+      });
+      setValue(null);
+      //const filtered = listProduct.filter(item => item.barCode !== barCode );
+      //setListProduct([...filtered, productDescription]);
     }
   }
 
@@ -74,20 +83,25 @@ export default function BarCode(props) {
       />
       {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
 
-      {promptVisible ? (<Dialog.Container visible={promptVisible}>
-        <Dialog.Title>Adicionar Produto</Dialog.Title>
-        <Dialog.Input onChangeText={event => setProduct(event)} placeholder="Descrição do produto"/>
-        <Dialog.Input onChangeText={event => setValue(event)} placeholder="Valor do produto"  />
-        <Dialog.Button label="Cancelar" onPress={() => setPromptVisible(false)}/>
-        <Dialog.Button label="Adicionar" onPress={handleProduct}/>
-      </Dialog.Container>): (
-      <Dialog.Container visible={visibleProductExist}>
-        <Dialog.Title>Informe valor do produto:</Dialog.Title>
-        {/* <Dialog.Input onChangeText={event => setProduct(event)} placeholder="Descrição do produto"/> */}
-        <Dialog.Input onChangeText={event => setValue(event)} placeholder="Valor do produto"  />
-        <Dialog.Button label="Cancelar" onPress={() => setVisibleProductExist(false)}/>
-        <Dialog.Button label="Adicionar" onPress={handleProduct}/>
-      </Dialog.Container>
+      {promptVisible ? (
+        <NewItem 
+          visible={promptVisible}
+          handleProduct={handleProduct}
+          setProduct={setProduct}
+          setPromptVisible={setPromptVisible}
+          handleProduct={handleProduct}
+          setValue={setValue}
+        />
+      ): (
+        <UpdateItem 
+          visible={visibleProductExist}
+          handleProduct={handleProduct}
+          value={value}
+          setValue={setValue}
+          updateValue={updateValue}
+          setVisibleProductExist={setVisibleProductExist}
+          valueLabel={valueLabel}
+        />
       )}
     </View>
   );

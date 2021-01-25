@@ -11,22 +11,16 @@ const Item = ({ title }) => (
 
 export default function ListProducts(props) {
   const {listProduct, setListProduct} = props;
-  
-  const renderItem = ({ item }) => <Item title={`${item.barCode} - ${item.name} - R$ ${item.value}`}/>;
+  const renderItem = ({ item }) => <Item title={`${item.name} - R$ ${item.value}`}/>;
   return (
     <View style={[ styles.container, { backgroundColor: '#eee' } ]}>
-    {/*           {!listProduct && listProduct.map((item, index) => (
-                <Text key={index}>{item.barCode} - {item.name}</Text> 
-              ))} */}
-    
-
-        <SafeAreaView style={styles.container}>
-            <FlatList 
-                data={listProduct} 
-                renderItem={renderItem} 
-                keyExtractor={item => item.barCode} 
-            />
-        </SafeAreaView>
+      <SafeAreaView style={styles.container}>
+        <FlatList 
+          data={listProduct} 
+          renderItem={renderItem} 
+          keyExtractor={item => item.id} 
+        />
+      </SafeAreaView>
     </View>
   );
 }
